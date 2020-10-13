@@ -386,6 +386,7 @@ function questionnaire_get_survey_list($courseid=0, $type='') {
             $params = [$courseid];
         }
     }
+
     return $DB->get_records_sql($sql, $params);
 }
 
@@ -422,7 +423,90 @@ function questionnaire_get_survey_select($courseid=0, $type='') {
             }
         }
     }
+
+    $surveylist = get_featured($surveylist);
     return $surveylist;
+}
+/**
+ * Check the surveylist is for surveys of type template
+ * Get the featured surveys from config which are a
+ * pipe delimited set of comma separated pairs of course
+ * shortname and template, i.e.
+ * TC101,Template1|TC101,Template2
+ * Get the id's of the survays based on the config data
+ * Move the featured surveys from surveylist to a new
+ * array. Return surveylist and new featuredsurveys arrays.
+ *
+ * @param array $surveylist
+ * @return array
+ */
+function get_featured(array $surveylist): array {
+    global $DB;
+    // If it is not a template return the array as if this code was not here.
+    if (strpos(current(array_keys($surveylist)), 'template') === false) {
+        return $surveylist;
+    }
+    $config = get_config('questionnaire', 'featuredtemplates');
+    // Remove any line breaks.
+    $config = preg_replace("/\r|\n/", "", $config);
+    $configitems = explode(',', $config);
+    // Remove blank items.
+    $configitems = array_filter($configitems, function ($item) {
+        return !empty($item);
+    });
+    if (empty($configitems)) {
+        return ['surveys' => $surveylist, 'featuredsurveys' => []];
+    }
+
+    $shortnames = [];
+    $conftempsbycourse = []; // Config templates by course shortnames.
+    foreach ($configitems as $item) {
+        list($shortname, $configtemplate) = explode('|', $item);
+        $shortnames = $shortname;
+        if (!isset($conftempsbycourse[$shortname])) {
+            $conftempsbycourse[$shortname] = [];
+        }
+        $conftempsbycourse[$shortname][] = $configtemplate;
+    }
+
+    // Get all course ids by course shortname in one DB call.
+    list($select, $params) = $DB->get_in_or_equal($shortnames, SQL_PARAMS_QM);
+    $courses = $DB->get_records_select('course', 'shortname ' . $select, $params);
+    // Build ALL template keys for each course in one go.
+    foreach ($courses as $course) {
+        if (empty($conftempsbycourse[$course->shortname])) {
+            continue;
+        }
+        // Config templates for this course.
+        $configtemps = $conftempsbycourse[$course->shortname];
+        $modinfo = get_fast_modinfo($course);
+        $instances = $modinfo->get_instances();
+        $templates = [];
+        foreach ($instances['questionnaire'] as $key => $cminfo) {
+            if (in_array($cminfo->name, $configtemps)) {
+                $templates[$key] = $key;
+            }
+        }
+    }
+    $featured = [];
+    if (!empty($templates)) {
+        list($insql, $inparams) = $DB->get_in_or_equal($templates);
+        $sql = "SELECT sid FROM {questionnaire} WHERE id $insql";
+        $rs = $DB->get_recordset_sql($sql, $inparams);
+        foreach ($rs as $record) {
+            $featured[] = 'template-' . $record->sid;
+        }
+        $rs->close();
+    }
+
+    $featuredsurveys = [];
+    foreach ($featured as $featurekey) {
+        if (array_key_exists($featurekey, $surveylist)) {
+            $featuredsurveys[$featurekey] = str_replace('class=""', 'class=featured', $surveylist[$featurekey]);
+            unset($surveylist[$featurekey]);
+        }
+    }
+    return ['surveys' => $surveylist, 'featuredsurveys' => $featuredsurveys];
 }
 
 function questionnaire_get_type ($id) {
@@ -746,10 +830,9 @@ function questionnaire_check_page_breaks($questionnaire) {
                 $prevtypeid = $positions[$j]['type_id'];
                 $prevdependencies = $positions[$j]['dependencies'];
 
-                $outerdependencies = count($qu['dependencies']) >= count($prevdependencies) ?
-                    $qu['dependencies'] : $prevdependencies;
-                $innerdependencies = count($qu['dependencies']) < count($prevdependencies) ?
-                    $qu['dependencies'] : $prevdependencies;
+                $depcount = count($qu['dependencies']);
+                $outerdependencies = $depcount >= count($prevdependencies) ? $qu['dependencies'] : $prevdependencies;
+                $innerdependencies = $depcount < count($prevdependencies) ? $qu['dependencies'] : $prevdependencies;
 
                 foreach ($outerdependencies as $okey => $outerdependency) {
                     foreach ($innerdependencies as $ikey => $innerdependency) {

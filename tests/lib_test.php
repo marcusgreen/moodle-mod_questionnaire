@@ -48,6 +48,36 @@ class mod_questionnaire_lib_testcase extends advanced_testcase {
         $this->assertTrue(questionnaire_supports(FEATURE_SHOW_DESCRIPTION));
         $this->assertNull(questionnaire_supports('unknown option'));
     }
+    public function test_questionnaire_get_featured() {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course(['shortname' => 'TC101']);
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_questionnaire');
+        $questionnaire = $generator->create_instance(['course' => $course->id, 'name' => 'Template 01']);
+        $DB->set_field('questionnaire_survey', 'realm', 'template', ['id' => $questionnaire->sid]);
+
+        // If no featured surveys are set in config.
+        $survey = questionnaire_get_survey_select($course->id, 'template');
+        $this->assertEquals(count($survey['surveys']), 1);
+        $this->assertEquals(count($survey['featuredsurveys']), 0);
+
+        // If featured templates are set.
+        $questionnaire = $generator->create_instance(['course' => $course->id, 'name' => 'NonFeaturedTemplate']);
+        $DB->set_field('questionnaire_survey', 'realm', 'template', ['id' => $questionnaire->sid]);
+        set_config('featuredtemplates', "TC101|Template 01,TC101|Template02", 'questionnaire');
+        $survey = questionnaire_get_survey_select($course->id, 'template');
+        $this->assertEquals(count($survey['surveys']), 1);
+        $this->assertEquals(count($survey['featuredsurveys']), 1);
+
+        // Config points to a non existant template e.g. if it has been deleted.
+        set_config('featuredtemplates', "TC101|NonExistantTemplate", 'questionnaire');
+        $survey = questionnaire_get_survey_select($course->id, 'template');
+        $this->assertEquals(count($survey['surveys']), 2);
+        $this->assertEquals(count($survey['featuredsurveys']),0);
+
+    }
 
     public function test_questionnaire_get_extra_capabilities() {
         $caps = questionnaire_get_extra_capabilities();

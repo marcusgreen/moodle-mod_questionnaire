@@ -35,6 +35,13 @@
     margin-left: 10px;
     margin-bottom: 0;
 }
+#page-mod-questionnaire-mod .mform .featured {
+    display: inherit;
+}
+#page-mod-questionnaire-mod .mform .featured::after {
+    content: '⭐';
+    padding-left: 3px;
+}
 
 #page-mod-questionnaire-questions .moving {
     border: medium dotted maroon;

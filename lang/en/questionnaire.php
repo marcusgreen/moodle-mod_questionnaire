@@ -654,3 +654,5 @@ $string['yesno_help'] = 'Simple Yes/No question.';
 $string['yourresponse'] = 'Your response';
 $string['yourresponses'] = 'Your responses';
 $string['crontask'] = 'Questionnaire cleanup job';
+$string['featuredtemplates'] = 'Featured templates';
+$string['featuredtemplates_text'] = 'Course shortname and Template name, e.g. Course01|Template1,Course01,Template2';
