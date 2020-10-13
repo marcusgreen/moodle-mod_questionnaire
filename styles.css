@@ -35,6 +35,13 @@
     margin-left: 10px;
     margin-bottom: 0;
 }
+#page-mod-questionnaire-mod .mform .featured {
+    display: inherit;
+}
+#page-mod-questionnaire-mod .mform .featured::after {
+    content: '⭐';
+    padding-left: 3px;
+}
 
 #page-mod-questionnaire-questions .moving {
     border: medium dotted maroon;
@@ -178,6 +185,43 @@ td.selected {
 .floatprinticon {
     margin-top: -30px;
     float: right;
+}
+
+/* progress bar styling */
+
+#page-mod-questionnaire-complete .questionnaire-progressbar {
+    height: 14px;
+    margin-top: 5px;
+    border: 1px solid #dedede;
+    border-radius: 5px;
+    width: auto;
+    overflow: hidden;
+}
+
+#page-mod-questionnaire-complete .questionnaire-progressbar-progress {
+    background-color: #1177d1;
+    height: 100%;
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+}
+
+#page-mod-questionnaire-complete .questionnaire-progressbar-info {
+    float: right;
+}
+
+#page-mod-questionnaire-complete #questionnaire-progressbar-percent {
+    margin-left: 5px;
+    margin-right: 5px;
+    min-width: 25px;
+    text-align: center;
+}
+
+#page-mod-questionnaire-complete .questionnaire-progressbar-wrapper {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    margin-left: 10px;
+    height: auto;
+    overflow: hidden;
 }
 
 .qn-legend {
@@ -346,4 +390,8 @@ td.selected {
 
 #page-mod-questionnaire-questions #region-main .mform .fitem .felement {
     margin-bottom: 0;
+}
+
+.qn-indent {
+    margin-left: 20px;
 }

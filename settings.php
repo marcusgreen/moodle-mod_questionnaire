@@ -48,6 +48,12 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configmultiselect('questionnaire/downloadoptions',
             get_string('textdownloadoptions', 'questionnaire'), '', array_keys($choices), $choices));
 
+
     $settings->add(new admin_setting_configcheckbox('questionnaire/allowemailreporting',
         get_string('configemailreporting', 'questionnaire'), get_string('configemailreportinglong', 'questionnaire'), 0));
+
+    $settings->add(new admin_setting_configtextarea('questionnaire/featuredtemplates',
+        get_string('featuredtemplates', 'questionnaire'),
+        get_string('featuredtemplates_text', 'questionnaire'),
+        "", PARAM_RAW, 20, 3));
 }
